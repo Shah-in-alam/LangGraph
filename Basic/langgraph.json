@@ -1,0 +1,7 @@
+{
+  "graphs": {
+    "main": {
+      "entrypoint": "agent:app"
+    }
+  }
+}
