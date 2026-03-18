@@ -1,0 +1,66 @@
+Introduction to LangGraph
+=========================
+
+LangGraph is a library for building stateful, multi-actor applications with LLMs.
+It is built on top of LangChain and allows developers to express complex AI
+workflows as directed graphs.
+
+Key Concepts
+------------
+
+State
+  Every LangGraph application maintains a shared state object that flows through
+  the graph nodes. Nodes read from the state and return updates to it.
+
+Nodes
+  Nodes are Python functions (or runnables) that receive the current state and
+  return partial updates. Each node performs one logical step — for example:
+  retrieve documents, call an LLM, or grade relevance.
+
+Edges
+  Edges connect nodes and define the execution order. Conditional edges allow
+  the graph to branch based on the current state, enabling retry loops and
+  dynamic routing.
+
+RAG with LangGraph
+------------------
+
+Retrieval Augmented Generation (RAG) is a technique that enhances LLM answers
+by fetching relevant documents at query time.  A typical LangGraph RAG pipeline
+looks like this:
+
+  START
+    ↓
+  retrieve         — embed the question and search a vector store
+    ↓
+  grade_documents  — filter out irrelevant retrieved chunks
+    ↓ (relevant docs found)
+  generate         — generate an answer conditioned on the context
+    ↓
+  END
+
+If no relevant documents are found after grading, the graph can rewrite the
+query and loop back to the retrieve node (Corrective RAG / CRAG pattern).
+
+MCP (Model Context Protocol)
+-----------------------------
+
+MCP is an open standard that lets AI assistants communicate with external tools
+and data sources through a uniform interface.  By wrapping the LangGraph RAG
+pipeline inside an MCP server, any MCP-compatible client (Claude Desktop, Claude
+Code, Cursor, etc.) gains four new tools:
+
+  • ingest_documents — load files or directories into the vector store
+  • query_rag        — ask a question and get a grounded answer
+  • list_documents   — inspect what has been indexed
+  • clear_index      — wipe the vector store
+
+Benefits
+--------
+
+1. Persistence — the ChromaDB vector store is saved to disk, so indexed
+   documents survive server restarts.
+2. Local embeddings — sentence-transformers runs entirely on your machine;
+   no embedding API key is required.
+3. Corrective retrieval — the grading + query-rewrite loop improves answer
+   quality when the first retrieval attempt returns poor results.
